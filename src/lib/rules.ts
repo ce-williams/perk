@@ -7,6 +7,7 @@ import type {
   Usage,
   UserCard,
 } from "./types";
+import { demoBenefitsFor } from "./catalog";
 export const money = (cents: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -229,6 +230,8 @@ export function actionsFor(
   const actions: Action[] = [];
   for (const card of store.cards.filter((c) => !c.archived))
     for (const benefit of benefits) {
+      if (!demoBenefitsFor(card.productId).some((b) => b.id === benefit.id))
+        continue;
       const state = stateFor(store, card.id, benefit);
       if (!state.relevant || state.eligibility === "ineligible") continue;
       const bal = balance(benefit, card, store.usages, asOf);

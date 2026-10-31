@@ -1,5 +1,5 @@
 import type { Benefit, CardProduct } from "./types";
-// Product identities only. No issuer benefit terms, fees, eligibility or values are asserted.
+// Products without publishedBenefits use fictional demo scenarios only.
 export const catalog: CardProduct[] = [
   {
     id: "amex-platinum",
@@ -109,6 +109,53 @@ export const catalog: CardProduct[] = [
     ink: "#fffef9",
     officialUrl: "https://www.americanexpress.com/",
   },
+  {
+    id: "fidelity-rewards",
+    issuer: "Fidelity · Elan Financial Services",
+    name: "Fidelity Rewards Visa Signature",
+    shortName: "Fidelity Rewards",
+    color: "#346638",
+    ink: "#fffef9",
+    officialUrl: "https://www.fidelity.com/spend-save/visa-signature-card",
+    publishedBenefits: {
+      reviewedOn: "2026-10-30",
+      sourceUrl: "https://www.fidelity.com/spend-save/visa-signature-card",
+      guideUrl:
+        "https://www.myvisacardportal.com/fidelity/en_us/landing/?card=visasignaturerewards",
+      items: [
+        {
+          title: "Unlimited 2% cash back",
+          description:
+            "Earn 2 points per eligible net dollar. The 2% value requires redemption into an eligible Fidelity account; other redemptions have different values.",
+        },
+        {
+          title: "$0 annual fee · no foreign transaction fees",
+          description:
+            "No annual or foreign transaction fees. Other charges may apply under your card agreement.",
+        },
+        {
+          title: "Global Entry or TSA PreCheck",
+          description:
+            "Up to $100 in Reward Points for an eligible application fee paid with the card. Check your benefit guide for eligibility and repeat-use timing.",
+        },
+        {
+          title: "Rental car damage coverage",
+          description:
+            "Auto Rental Collision Damage Waiver up to $75,000. Review covered rentals, exclusions and claim requirements before renting.",
+        },
+        {
+          title: "Emergency medical and dental coverage",
+          description:
+            "Coverage on qualifying trips paid with your card, subject to benefit-guide limits and exclusions.",
+        },
+        {
+          title: "Zero Fraud Liability",
+          description:
+            "Reimbursement for unauthorized account use, subject to program terms.",
+        },
+      ],
+    },
+  },
 ];
 // Deliberately generic, identical fictional scenarios for every card. Never production terms.
 export const benefits: Benefit[] = [
@@ -171,6 +218,8 @@ export const benefits: Benefit[] = [
 ];
 export const getProduct = (id: string) => catalog.find((c) => c.id === id)!;
 export const getBenefit = (id: string) => benefits.find((b) => b.id === id)!;
+export const demoBenefitsFor = (productId: string) =>
+  getProduct(productId)?.publishedBenefits ? [] : benefits;
 export const cadenceLabel = {
   monthly: "Monthly",
   quarterly: "Quarterly",

@@ -1,10 +1,7 @@
 export type Evidence = "confirmed" | "self-reported" | "estimated" | "unknown";
 export type Cadence = "monthly" | "quarterly" | "calendar-year" | "anniversary";
 export type Enrollment =
-  | "unknown"
-  | "not-enrolled"
-  | "enrolled"
-  | "not-required";
+  "unknown" | "not-enrolled" | "enrolled" | "not-required";
 export type Eligibility = "unknown" | "eligible" | "ineligible";
 export type CardProduct = {
   id: string;
@@ -14,6 +11,12 @@ export type CardProduct = {
   color: string;
   ink: string;
   officialUrl: string;
+  publishedBenefits?: {
+    reviewedOn: string;
+    sourceUrl: string;
+    guideUrl: string;
+    items: { title: string; description: string }[];
+  };
 };
 export type Benefit = {
   id: string;

@@ -29,6 +29,7 @@ import {
   catalog,
   getBenefit,
   getProduct,
+  demoBenefitsFor,
   cadenceLabel,
 } from "@/lib/catalog";
 import {
@@ -56,6 +57,7 @@ import {
 import { calendarFile } from "@/lib/calendar";
 import type {
   Benefit,
+  CardProduct,
   BenefitState,
   Enrollment,
   Store,
@@ -63,12 +65,7 @@ import type {
 } from "@/lib/types";
 import { CardArt } from "./card-art";
 export type View =
-  | "overview"
-  | "cards"
-  | "benefits"
-  | "actions"
-  | "calendar"
-  | "settings";
+  "overview" | "cards" | "benefits" | "actions" | "calendar" | "settings";
 const links = [
   { view: "overview", href: "/", label: "Overview", icon: LayoutDashboard },
   { view: "cards", href: "/cards/", label: "My cards", icon: Wallet },
@@ -253,7 +250,9 @@ export function PerkApp({ view }: { view: View }) {
             },
           ],
         },
-        "Card added. Fictional demo scenarios are ready.",
+        getProduct(productId).publishedBenefits
+          ? "Card added. Published Fidelity benefits are ready."
+          : "Card added. Fictional demo scenarios are ready.",
       );
   }
   function loadSample() {
@@ -435,8 +434,9 @@ export function PerkApp({ view }: { view: View }) {
           <div className="demo-banner">
             <DemoLabel />
             <p>
-              Real card names. Fictional benefit scenarios and amounts. Verify
-              actual terms with your issuer.
+              Fidelity includes published benefit summaries. Other cards use
+              fictional scenarios and amounts. Verify current terms with your
+              issuer.
             </p>
           </div>
           {error && (
@@ -563,7 +563,9 @@ export function PerkApp({ view }: { view: View }) {
                                 {getProduct(c.productId).shortName}
                               </strong>
                               <small>
-                                {benefits.length} fictional scenarios
+                                {getProduct(c.productId).publishedBenefits
+                                  ? `${getProduct(c.productId).publishedBenefits!.items.length} published benefits`
+                                  : `${benefits.length} fictional scenarios`}
                               </small>
                             </Link>
                           ))}
@@ -707,7 +709,9 @@ export function PerkApp({ view }: { view: View }) {
                               </Link>
                             </div>
                             <p className="muted">
-                              4 fictional benefit scenarios
+                              {product.publishedBenefits
+                                ? `${product.publishedBenefits.items.length} published benefits`
+                                : "4 fictional benefit scenarios"}
                             </p>
                             <div className="value-line">
                               <span>
@@ -857,12 +861,15 @@ export function PerkApp({ view }: { view: View }) {
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            Issuer homepage <ArrowUpRight size={16} />
+                            {product.publishedBenefits
+                              ? "Official card benefits"
+                              : "Issuer homepage"}{" "}
+                            <ArrowUpRight size={16} />
                           </a>
                           <small className="block muted">
-                            Official homepage only. No verified enrollment
-                            destination is available for these fictional
-                            scenarios.
+                            {product.publishedBenefits
+                              ? "Published summaries only. Your card’s current benefit guide governs coverage and eligibility."
+                              : "Official homepage only. No verified enrollment destination is available for these fictional scenarios."}
                           </small>
                         </div>
                       </div>
@@ -882,37 +889,46 @@ export function PerkApp({ view }: { view: View }) {
                           )
                         }
                       />
-                      <div className="detail-summary">
-                        <div>
-                          <span>Recorded · {date.slice(0, 4)}</span>
-                          <strong>{money(v.confirmed + v.selfReported)}</strong>
-                          <small>
-                            {money(v.selfReported)} self-reported ·{" "}
-                            {money(v.confirmed)} confirmed
-                          </small>
+                      {product.publishedBenefits && (
+                        <PublishedBenefits product={product} />
+                      )}
+                      {!product.publishedBenefits && (
+                        <div className="detail-summary">
+                          <div>
+                            <span>Recorded · {date.slice(0, 4)}</span>
+                            <strong>
+                              {money(v.confirmed + v.selfReported)}
+                            </strong>
+                            <small>
+                              {money(v.selfReported)} self-reported ·{" "}
+                              {money(v.confirmed)} confirmed
+                            </small>
+                          </div>
+                          <div>
+                            <span>After annual fee</span>
+                            <strong>
+                              {v.net === null ? "Unknown" : money(v.net)}
+                            </strong>
+                            <small>
+                              {v.net === null
+                                ? "Add your annual fee to compare."
+                                : "Calendar-year recorded value minus your fee."}
+                            </small>
+                          </div>
+                          <p>
+                            Fictional demo usage only. A calendar-year
+                            comparison may differ from your card anniversary
+                            year. No unused allowance is counted as savings.
+                          </p>
                         </div>
-                        <div>
-                          <span>After annual fee</span>
-                          <strong>
-                            {v.net === null ? "Unknown" : money(v.net)}
-                          </strong>
-                          <small>
-                            {v.net === null
-                              ? "Add your annual fee to compare."
-                              : "Calendar-year recorded value minus your fee."}
-                          </small>
+                      )}
+                      {!product.publishedBenefits && (
+                        <div className="section-heading section-block">
+                          <h2>Benefits, with the details.</h2>
+                          <span className="muted">4 fictional scenarios</span>
                         </div>
-                        <p>
-                          Fictional demo usage only. A calendar-year comparison
-                          may differ from your card anniversary year. No unused
-                          allowance is counted as savings.
-                        </p>
-                      </div>
-                      <div className="section-heading section-block">
-                        <h2>Benefits, with the details.</h2>
-                        <span className="muted">4 fictional scenarios</span>
-                      </div>
-                      {benefits.map((b) => {
+                      )}
+                      {demoBenefitsFor(c.productId).map((b) => {
                         const s = stateFor(store, c.id, b),
                           bal = balance(b, c, store.usages, date),
                           history = store.usages.filter(
@@ -1467,8 +1483,8 @@ export function PerkApp({ view }: { view: View }) {
           }}
         >
           <p className="muted">
-            Search real card names. Each card gets the same fictional test
-            scenarios; no real benefits or fees are asserted.
+            Search real card names. Fidelity includes published benefits; other
+            cards use fictional test scenarios.
           </p>
           <label className="search-field">
             <Search size={18} />
@@ -1743,7 +1759,7 @@ function calendarEvents(store: Store, month: string, asOf: string) {
       product: string;
     }[] = [];
   for (const card of store.cards.filter((c) => !c.archived))
-    for (const b of benefits) {
+    for (const b of demoBenefitsFor(card.productId)) {
       const s = stateFor(store, card.id, b);
       if (!s.relevant || s.eligibility === "ineligible") continue;
       const p = periodFor(b, last, card.openedOn);
@@ -1810,7 +1826,11 @@ function CardForm({
           max={asOf}
           onChange={(e) => setOpened(e.target.value)}
         />
-        <small>Needed for anniversary scenarios.</small>
+        <small>
+          {getProduct(card.productId).publishedBenefits
+            ? "Optional portfolio detail."
+            : "Needed for anniversary scenarios."}
+        </small>
       </label>
       <label>
         Your annual fee (USD)
@@ -1951,5 +1971,59 @@ function UsageForm({
         Record self-reported value <Check size={16} />
       </button>
     </form>
+  );
+}
+
+function PublishedBenefits({ product }: { product: CardProduct }) {
+  const published = product.publishedBenefits;
+  if (!published) return null;
+  return (
+    <section className="section-block" aria-label="Published card benefits">
+      <div className="section-heading">
+        <h2>Fidelity benefits, with the details.</h2>
+        <span className="muted">
+          {published.items.length} published benefits
+        </span>
+      </div>
+      <p className="muted">
+        Reviewed {readable(published.reviewedOn)}. These are reference
+        summaries; eligibility and usage have not been verified for your
+        account. They do not create recurring allowances, deadlines or recorded
+        savings.
+      </p>
+      {published.items.map((benefit) => (
+        <details className="benefit-detail" key={benefit.title}>
+          <summary>
+            <ShieldCheck size={20} strokeWidth={1.5} />
+            <span>
+              <strong>{benefit.title}</strong>
+              <small>Published benefit · terms apply</small>
+            </span>
+            <Plus className="details-plus" size={18} />
+          </summary>
+          <div className="benefit-body">
+            <p>{benefit.description}</p>
+            <a
+              className="text-link"
+              href={published.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Fidelity source <ArrowUpRight size={16} />
+            </a>
+            <br />
+            <a
+              className="text-link"
+              href={published.guideUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Current benefit guide and coverage terms{" "}
+              <ArrowUpRight size={16} />
+            </a>
+          </div>
+        </details>
+      ))}
+    </section>
   );
 }
